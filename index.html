@@ -1,0 +1,311 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RU Tech — оценка IT-компаний</title><link rel="icon" href="data:,">
+<script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--fg:#111827;--mut:#6b7280;--bd:#e5e7eb;--acc:#0b7285;--grid:#f1f3f5}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 -apple-system,Segoe UI,Roboto,Arial}
+header{background:var(--card);border-bottom:1px solid var(--bd);padding:10px 16px;position:sticky;top:0;z-index:20}
+.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+h1{font-size:15px;margin:0;font-weight:650;letter-spacing:.2px}
+.grp{display:flex;align-items:center;gap:6px}.grp>span.l{font-size:12px;color:var(--mut)}
+button,select{font:13px inherit;padding:4px 9px;border:1px solid var(--bd);border-radius:6px;background:#fff;cursor:pointer;color:var(--fg)}
+button:hover{border-color:#9ca3af}button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.chip{display:flex;align-items:center;gap:6px;font-size:12.5px;padding:3px 9px;border:1px solid var(--bd);border-radius:14px;cursor:pointer;user-select:none;background:#fff}
+.chip.off{opacity:.4}.dot{width:10px;height:10px;border-radius:2px;flex:none}
+#upd{margin-left:auto;font-size:12px;color:var(--mut);text-align:right}
+.wrap{padding:12px;display:grid;gap:12px;max-width:1500px;margin:0 auto}
+.panel{background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:10px 12px}
+.ph{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
+.ph h2{font-size:13.5px;margin:0;font-weight:650}
+.ph .sub{font-size:12px;color:var(--mut)}
+.ph .r{margin-left:auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.g3{display:grid;grid-template-columns:3fr 2fr;gap:12px}
+.chart{height:330px}
+.note{font-size:11.5px;color:var(--mut);line-height:1.55}
+.up{color:#087f5b}.dn{color:#c92a2a}
+/* карточки котировок */
+.kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
+.kpi{border:1px solid var(--bd);border-top-width:4px;border-radius:8px;padding:8px 10px;background:var(--card)}
+.kpi .n{font-weight:650;font-size:13px}.kpi .n span{color:var(--mut);font-weight:400;font-size:11px;margin-left:4px}
+.kpi .p{font-size:18px;font-weight:650;font-variant-numeric:tabular-nums;margin:2px 0}
+.kpi .p small{font-size:12.5px;font-weight:600;margin-left:4px}
+.kpi .m{display:flex;justify-content:space-between;font-size:12px;color:var(--mut);margin-top:2px}
+.kpi .m b{color:var(--fg);font-variant-numeric:tabular-nums;font-weight:600}
+.kpi .big{font-size:12px;color:var(--mut);margin-top:6px;padding-top:6px;border-top:1px solid var(--grid)}
+.kpi .big b{font-size:15px;color:var(--fg)}
+/* таблицы */
+.tbl{overflow-x:auto}
+table.t{border-collapse:collapse;font-size:12.5px;width:100%}
+.t th,.t td{padding:6px 8px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--grid);font-variant-numeric:tabular-nums}
+.t thead th{font-weight:600;color:#495057;font-size:11.5px;background:#fff;cursor:pointer}
+.t thead th.g{text-align:center;color:#212529;border-bottom:1px solid #dee2e6;cursor:default;font-size:12px}
+.t th.nm,.t td.nm{text-align:left;position:sticky;left:0;background:#fff;z-index:2}
+.t td.nm b{font-weight:600}.t td.nm span{color:#adb5bd;font-size:10.5px;margin-left:5px}
+.t .bl{border-left:1px solid #dee2e6}
+.t tr.med td{font-weight:600;background:#fafbfc;border-top:1px solid #dee2e6}
+.t th.sel{box-shadow:inset 0 -2px 0 var(--acc);color:var(--acc)}
+.t td.sel{outline:2px solid var(--acc);outline-offset:-2px}
+.t .src{color:var(--mut);font-size:11px;text-align:left}
+.flag{color:#c92a2a;cursor:help;font-weight:700;margin-left:3px}
+.legend{display:flex;gap:10px;align-items:center;font-size:11.5px;color:var(--mut)}
+.sw{display:inline-block;width:42px;height:10px;border-radius:2px;background:linear-gradient(90deg,#9ec5f4,#f0efec,#f4b6b0)}
+.warn{background:#fff8e6;border:1px solid #fde7b0;border-radius:8px;padding:8px 12px;font-size:12px;color:#7a5800}
+@media(max-width:1200px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:1000px){.g2,.g3{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style></head><body>
+<header>
+ <div class="top"><h1>RU Tech · оценка IT-компаний</h1>
+  <div class="grp"><span class="l">Мультипликатор</span><span id="multSw"></span></div>
+  <div class="grp"><span class="l">Год</span><span id="yearSw"></span></div>
+  <div id="upd"></div></div>
+ <div class="chips" id="chips"></div>
+</header>
+<div class="wrap">
+ <div id="warnbox"></div>
+ <div class="kpis" id="kpis"></div>
+
+ <div class="g2">
+  <div class="panel"><div class="ph"><h2 id="barTitle"></h2><span class="sub">пунктир — медиана выборки</span></div><div class="chart" id="cBar"></div></div>
+  <div class="panel"><div class="ph"><h2>Оценка и рост</h2><span class="sub" id="scSub"></span>
+   <div class="r"><span class="sub">Рост:</span><select id="gWin"><option value="2025-2028">CAGR 2025–28</option><option value="2026-2028">CAGR 2026–28</option><option value="2025-2030">CAGR 2025–30</option></select></div></div>
+   <div class="chart" id="cSc"></div></div>
+ </div>
+
+ <div class="panel"><div class="ph"><h2>Мультипликаторы по текущей цене</h2>
+  <span class="legend"><span>дешевле медианы</span><span class="sw"></span><span>дороже медианы</span></span>
+  <span class="sub" style="margin-left:auto">клик по заголовку — сортировка</span></div>
+  <div class="tbl" id="mtab"></div></div>
+
+ <div class="panel"><div class="ph"><h2>Сравнение финансовых показателей</h2>
+  <div class="r"><select id="fMetric"></select><span id="fView"></span></div></div>
+  <div class="g3"><div class="chart" id="cFin" style="height:360px"></div><div class="tbl" id="ftab"></div></div></div>
+
+ <div class="panel"><div class="ph"><h2>История</h2><span class="sub" id="hSub"></span>
+  <div class="r"><span id="hPer"></span></div></div>
+  <div class="g2"><div><div class="sub" style="font-size:12px;color:var(--mut)">Цена, ребазировано к 100 на начало периода (пунктир — IMOEX)</div><div class="chart" id="cPx"></div></div>
+  <div><div class="sub" style="font-size:12px;color:var(--mut)" id="hMultT"></div><div class="chart" id="cHm"></div></div></div></div>
+
+ <div class="panel note" id="method"></div>
+</div>
+<script>
+(async()=>{
+try{
+const j=async u=>{const r=await fetch(u+'?ts='+Date.now(),{cache:'no-store'});if(!r.ok)throw new Error(u+': '+r.status);return r.json()};
+const F=await j('data/fundamentals.json');
+let P=null;try{P=await j('data/prices.json')}catch(e){P=null}
+let S=null;try{S=await j('data/status.json')}catch(e){S=null}
+
+const C=F.companies,K=C.map(c=>c.key),by=Object.fromEntries(C.map(c=>[c.key,c]));
+const sel=new Set(K);
+const st={mult:'ev',year:'NTM',fm:'rev',fv:'abs',per:'1Г'};
+const YR=['2025','2026','2027','2028'],YALL=F.years;
+const MN={ev:{lab:'EV/EBITDAC',den:'ebitdac'},pe:{lab:'P/NIC',den:'nic'}};
+const nf=(v,d=1)=>v==null||!isFinite(v)?'—':v.toLocaleString('ru-RU',{minimumFractionDigits:d,maximumFractionDigits:d});
+const xf=v=>v==null?'—':nf(v,1)+'x';
+const pf=(v,d=1)=>v==null||!isFinite(v)?'—':(v>0?'+':'')+nf(v,d)+'%';
+const cls=v=>v==null?'':v>=0?'up':'dn';
+const median=a=>{a=a.filter(v=>v!=null&&isFinite(v)).sort((x,y)=>x-y);if(!a.length)return null;const m=a.length>>1;return a.length%2?a[m]:(a[m-1]+a[m])/2};
+const today=new Date();
+
+/* ---------- цены ---------- */
+const T=k=>P&&P.tickers&&P.tickers[k];
+const price=k=>{const t=T(k);return t&&t.last!=null?t.last:by[k].xls_price};
+const mcap=(k,px)=>(px??price(k))*by[k].shares_mn/1000;          // млрд руб
+const ev=(k,px)=>mcap(k,px)+by[k].net_debt_bn;
+/* ---------- финпоказатели ---------- */
+const ntmW=d=>{const y=d.getFullYear(),e=new Date(y,11,31),b=new Date(y,0,1);return {y,w:Math.max(0,(e-d)/(e-b+864e5))}};
+function fin(k,m,y,d){const s=by[k].fin[m];
+ if(y!=='NTM')return s[y];
+ const {y:Y,w}=ntmW(d||today),a=s[String(Y)],b=s[String(Y+1)];
+ return a==null||b==null?null:w*a+(1-w)*b}
+function mult(k,mt,y,px,d){const den=fin(k,MN[mt].den,y,d);if(den==null)return null;if(den<=0)return -1;
+ const num=mt==='ev'?ev(k,px):mcap(k,px);return num*1000/den}
+const mv=v=>v===-1?null:v;  // -1 = отрицательный знаменатель
+const cagr=(k,m,a,b)=>{const x=fin(k,m,a),y=fin(k,m,b);return x>0&&y>0?(Math.pow(y/x,1/(b-a))-1)*100:null};
+const ylab=y=>y==='NTM'?'NTM':y;
+
+/* ---------- шапка ---------- */
+const sw=(id,items,key,cb)=>{const el=document.getElementById(id);el.innerHTML='';items.forEach(([v,l])=>{const b=document.createElement('button');b.textContent=l;if(st[key]===v)b.classList.add('on');b.onclick=()=>{st[key]=v;[...el.children].forEach(x=>x.classList.remove('on'));b.classList.add('on');cb()};el.appendChild(b)})};
+sw('multSw',[['ev','EV/EBITDAC'],['pe','P/NIC']],'mult',renderVal);
+sw('yearSw',[...YR.map(y=>[y,y]),['NTM','NTM']],'year',renderVal);
+document.getElementById('yearSw').lastChild.title='Следующие 12 месяцев: взвешивание прогнозов текущего и следующего года по оставшимся дням';
+const chips=document.getElementById('chips');
+C.forEach(c=>{const d=document.createElement('div');d.className='chip';d.innerHTML=`<span class="dot" style="background:${c.color}"></span>${c.name}`;
+ d.onclick=()=>{sel.has(c.key)?sel.delete(c.key):sel.add(c.key);d.classList.toggle('off');renderAll()};chips.appendChild(d)});
+const live=!!(P&&P.tickers&&Object.keys(P.tickers).length);
+document.getElementById('upd').innerHTML=live?`Котировки MOEX: ${P.updated}<br>Прогнозы: Excel-база от ${fd(F.asof_excel)}`:
+ `<span class="dn">Котировки MOEX ещё не загружены — цены из Excel на ${fd(F.asof_excel)}</span>`;
+function fd(s){return s?s.split('-').reverse().join('.'):'—'}
+
+/* предупреждения о данных */
+const W=[...(F.warnings||[]).map(w=>'Excel-база: '+w),...((S&&S.warn)||[]).map(w=>'MOEX: '+w)];
+C.forEach(c=>{if(c.flags)Object.values(c.flags).forEach(f=>W.push(c.name+': '+f))});
+if(W.length)document.getElementById('warnbox').innerHTML='<div class="warn"><b>Требует внимания:</b><br>'+W.join('<br>')+'</div>';
+
+/* ---------- доходности по истории ---------- */
+function pxAt(k,date){const t=T(k);if(!t||!t.x.length)return null;let i=t.x.length-1;while(i>=0&&t.x[i]>date)i--;return i>=0?t.y[i]:null}
+const iso=d=>d.toISOString().slice(0,10);
+const ago=(n,unit)=>{const d=new Date(today);unit==='m'?d.setMonth(d.getMonth()-n):d.setDate(d.getDate()-n);return iso(d)};
+const ret=(k,date)=>{const a=pxAt(k,date),b=price(k);return a&&b?(b/a-1)*100:null};
+
+function renderKpis(){const el=document.getElementById('kpis');el.innerHTML='';
+ C.filter(c=>sel.has(c.key)).forEach(c=>{const k=c.key,t=T(k),ch=t?t.chg:null,m=mult(k,st.mult,st.year);
+  const d=document.createElement('div');d.className='kpi';d.style.borderTopColor=c.color;
+  d.innerHTML=`<div class="n">${c.name}<span>${t&&t.secid||k}</span></div>
+  <div class="p">${nf(price(k),price(k)<200?2:1)} ₽<small class="${cls(ch)}">${ch==null?'':pf(ch,2)}</small></div>
+  <div class="m"><span>Кап-ция / EV, млрд</span><b>${nf(mcap(k))} / ${nf(ev(k))}${c.flags&&c.flags.net_debt_bn?'<span class="flag" title="'+c.flags.net_debt_bn+'">⚠</span>':''}</b></div>
+  <div class="m"><span>1М · 3М</span><b><span class="${cls(ret(k,ago(1,'m')))}">${pf(ret(k,ago(1,'m')))}</span> · <span class="${cls(ret(k,ago(3,'m')))}">${pf(ret(k,ago(3,'m')))}</span></b></div>
+  <div class="m"><span>С нач. года · 1Г</span><b><span class="${cls(ret(k,today.getFullYear()-1+'-12-31'))}">${pf(ret(k,today.getFullYear()-1+'-12-31'))}</span> · <span class="${cls(ret(k,ago(12,'m')))}">${pf(ret(k,ago(12,'m')))}</span></b></div>
+  <div class="big">${MN[st.mult].lab} ${ylab(st.year)}: <b>${m===-1?'отр.':xf(m)}</b></div>`;el.appendChild(d)})}
+
+/* ---------- бар: текущая оценка ---------- */
+const L0={margin:{l:8,r:16,t:8,b:30},plot_bgcolor:'#fff',paper_bgcolor:'#fff',font:{family:'-apple-system,Segoe UI,Roboto,Arial',size:11.5,color:'#374151'},showlegend:false};
+const CFG={displayModeBar:false,responsive:true};
+function renderBar(){const mt=st.mult,y=st.year;
+ document.getElementById('barTitle').textContent=`${MN[mt].lab} ${y==='NTM'?'NTM (след. 12 мес.)':y+'П'} по текущей цене`;
+ const rows=K.filter(k=>sel.has(k)).map(k=>({k,v:mult(k,mt,y)}));
+ const pos=rows.filter(r=>r.v!=null&&r.v>0).sort((a,b)=>b.v-a.v),neg=rows.filter(r=>r.v===-1||r.v==null);
+ const med=median(pos.map(r=>r.v));
+ const ys=[...neg.map(r=>by[r.k].name),...pos.map(r=>by[r.k].name)];
+ const tr={type:'bar',orientation:'h',y:pos.map(r=>by[r.k].name),x:pos.map(r=>r.v),marker:{color:pos.map(r=>by[r.k].color),line:{color:'#fff',width:2}},
+  text:pos.map(r=>xf(r.v)),textposition:'outside',cliponaxis:false,textfont:{color:'#111827',size:12},
+  customdata:pos.map(r=>[med?((r.v/med-1)*100):null,by[r.k].source]),
+  hovertemplate:'<b>%{y}</b>: %{x:.1f}x<br>к медиане: %{customdata[0]:+.0f}%<br>прогноз: %{customdata[1]}<extra></extra>'};
+ const ann=neg.map(r=>({x:0,y:by[r.k].name,xanchor:'left',text:r.v===-1?'отрицательная прибыль — н/п':'нет прогноза',showarrow:false,font:{size:11,color:'#6b7280'}}));
+ const shp=med?[{type:'line',x0:med,x1:med,yref:'paper',y0:0,y1:1,line:{color:'#6b7280',width:1,dash:'dash'}}]:[];
+ if(med)ann.push({x:med,yref:'paper',y:1,yanchor:'bottom',text:'медиана '+xf(med),showarrow:false,font:{size:10.5,color:'#6b7280'}});
+ const mx=Math.max(1,...pos.map(r=>r.v));
+ Plotly.react('cBar',[tr],{...L0,margin:{l:80,r:30,t:18,b:26},bargap:.35,
+  xaxis:{range:[0,mx*1.18],gridcolor:'#f1f3f5',ticksuffix:'x',zeroline:false},
+  yaxis:{categoryorder:'array',categoryarray:ys,automargin:true},shapes:shp,annotations:ann},CFG)}
+
+/* ---------- скаттер: оценка vs рост ---------- */
+function renderSc(){const mt=st.mult,y=st.year,[a,b]=document.getElementById('gWin').value.split('-').map(Number),m=MN[mt].den;
+ const mlab=m==='ebitdac'?'EBITDAC':'NIC';
+ document.getElementById('scSub').textContent=`ось X — CAGR ${mlab} ${a}–${b}, ось Y — ${MN[mt].lab} ${ylab(y)}, размер — капитализация`;
+ const pts=K.filter(k=>sel.has(k)).map(k=>({k,x:cagr(k,m,a,b),y:mv(mult(k,mt,y)),s:mcap(k)})),ok=pts.filter(p=>p.x!=null&&p.y!=null),out=pts.filter(p=>p.x==null||p.y==null);
+ const mx=median(ok.map(p=>p.x)),my=median(ok.map(p=>p.y)),smax=Math.max(...ok.map(p=>p.s),1);
+ const rx=(Math.max(...ok.map(p=>p.x),1)-Math.min(...ok.map(p=>p.x),0))||1,ry=(Math.max(...ok.map(p=>p.y),1))||1;
+ const tp=ok.map((p,i)=>{const nb=ok.filter((q,j)=>j!==i&&Math.abs(q.x-p.x)<rx*.12&&Math.abs(q.y-p.y)<ry*.15);
+  if(!nb.length)return 'top center';if(p.y>=Math.max(...nb.map(q=>q.y)))return 'top center';if(p.y<=Math.min(...nb.map(q=>q.y)))return 'bottom center';return 'middle right'});
+ const tr={type:'scatter',mode:'markers+text',x:ok.map(p=>p.x),y:ok.map(p=>p.y),text:ok.map(p=>by[p.k].name),textposition:tp,textfont:{size:11.5,color:'#111827'},
+  marker:{size:ok.map(p=>14+40*Math.sqrt(p.s/smax)),color:ok.map(p=>by[p.k].color),opacity:.85,line:{color:'#fff',width:2}},
+  customdata:ok.map(p=>[p.s,p.y/p.x]),cliponaxis:false,
+  hovertemplate:'<b>%{text}</b><br>'+MN[mt].lab+': %{y:.1f}x<br>CAGR '+mlab+': %{x:.1f}%<br>кап-ция: %{customdata[0]:.1f} млрд ₽<br>мультипликатор / рост: %{customdata[1]:.2f}<extra></extra>'};
+ const xs=ok.map(p=>p.x),ys=ok.map(p=>p.y),pad=(lo,hi)=>{const d=(hi-lo)||1;return [lo-d*.18,hi+d*.22]};
+ const xr=pad(Math.min(...xs,0),Math.max(...xs)),yr=pad(Math.min(...ys,0),Math.max(...ys));yr[0]=Math.max(0,yr[0]);
+ const shp=[],ann=[];
+ if(mx!=null){shp.push({type:'line',x0:mx,x1:mx,y0:yr[0],y1:yr[1],line:{color:'#adb5bd',width:1,dash:'dot'}},{type:'line',x0:xr[0],x1:xr[1],y0:my,y1:my,line:{color:'#adb5bd',width:1,dash:'dot'}});
+  ann.push({x:xr[1],y:yr[0],xanchor:'right',yanchor:'bottom',text:'дешевле медианы, рост выше',showarrow:false,font:{size:10.5,color:'#1c5cab'}},
+   {x:xr[0],y:yr[1],xanchor:'left',yanchor:'top',text:'дороже медианы, рост ниже',showarrow:false,font:{size:10.5,color:'#c92a2a'}})}
+ if(out.length)ann.push({xref:'paper',x:0,yref:'paper',y:-0.24,xanchor:'left',text:'Не показаны (отриц. база или нет данных): '+out.map(p=>by[p.k].name).join(', '),showarrow:false,font:{size:10.5,color:'#6b7280'}});
+ Plotly.react('cSc',[tr],{...L0,margin:{l:44,r:16,t:10,b:out.length?62:34},xaxis:{range:xr,ticksuffix:'%',gridcolor:'#f1f3f5',zeroline:false,title:{text:'CAGR '+mlab+', % годовых',font:{size:11}}},
+  yaxis:{range:yr,ticksuffix:'x',gridcolor:'#f1f3f5',zeroline:false},shapes:shp,annotations:ann},CFG)}
+
+/* ---------- тепловая таблица ---------- */
+let sortCol=null,sortDir=1;
+const mix=(a,b,t)=>{const p=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));const A=p(a),B=p(b);return 'rgb('+A.map((x,i)=>Math.round(x+(B[i]-x)*t)).join(',')+')'};
+const heat=(v,med)=>{if(v==null||!med||v<=0)return '';const r=Math.log(v/med),t=Math.min(1,Math.abs(r)/0.6);return 'background:'+(r<0?mix('#f0efec','#9ec5f4',t):mix('#f0efec','#f4b6b0',t))};
+function renderTable(){
+ const ks=K.filter(k=>sel.has(k)),cols=[];
+ const grp=[['Рынок',3],['EV/EBITDAC',5],['P/NIC',5],['Долг',2],['',1]];
+ cols.push({id:'px',lab:'Цена, ₽',v:k=>price(k),f:v=>nf(v,v<200?2:1)},{id:'mc',lab:'Кап-ция, млрд',v:k=>mcap(k),f:v=>nf(v)},{id:'ev',lab:'EV, млрд',v:k=>ev(k),f:v=>nf(v)});
+ ['ev','pe'].forEach(mt=>[...YR,'NTM'].forEach((y,i)=>cols.push({id:mt+y,lab:ylab(y),mt,y,heat:true,bl:i===0,v:k=>mult(k,mt,y),f:v=>v===-1?'отр.':xf(v)})));
+ cols.push({id:'nd',lab:'ЧД, млрд',bl:true,v:k=>by[k].net_debt_bn,f:v=>nf(v,2)},{id:'ndl',lab:'ЧД/EBITDAC LTM',v:k=>by[k].nd_ebitdac_xls.ltm_9m26,f:v=>v==null?'н/д':xf(v)},{id:'src',lab:'Прогноз',v:k=>by[k].source,f:v=>v,txt:true});
+ const meds={};cols.forEach(c=>{if(c.heat)meds[c.id]=median(ks.map(k=>mv(c.v(k))).filter(v=>v>0))});
+ let rows=ks.slice();
+ if(sortCol){const c=cols.find(x=>x.id===sortCol);rows.sort((a,b)=>{let x=c.v(a),y=c.v(b);if(c.heat){x=mv(x);y=mv(y)}if(x==null)return 1;if(y==null)return -1;return (typeof x==='string'?x.localeCompare(y):x-y)*sortDir})}
+ let h='<table class="t"><thead><tr><th class="nm g" rowspan="2" style="cursor:default">Компания</th>';
+ grp.forEach(([g,n])=>h+=`<th class="g bl" colspan="${n}">${g}</th>`);h+='</tr><tr>';
+ cols.forEach(c=>{const isSel=c.mt===st.mult&&c.y===st.year;h+=`<th data-c="${c.id}" class="${c.bl?'bl ':''}${isSel?'sel':''}">${c.lab}${sortCol===c.id?(sortDir>0?' ▲':' ▼'):''}</th>`});
+ h+='</tr></thead><tbody>';
+ rows.forEach(k=>{const co=by[k];h+=`<tr><td class="nm"><span class="dot" style="display:inline-block;background:${co.color};margin:0 6px 0 0"></span><b>${co.name}</b><span>${T(k)&&T(k).secid||k}</span></td>`;
+  cols.forEach(c=>{const v=c.v(k),isSel=c.mt===st.mult&&c.y===st.year;let s=c.f(v);
+   if(c.id==='nd'&&co.flags&&co.flags.net_debt_bn)s+=`<span class="flag" title="${co.flags.net_debt_bn}">⚠</span>`;
+   if(c.id==='ndl'){const x=co.nd_ebitdac_xls['2025'];s=`<span title="Из Excel (Cbonds): 2025 — ${x==null?'н/д':nf(x,2)+'x'}; LTM на 30.09.2026 — ${v==null?'н/д':nf(v,2)+'x'}">${s}</span>`}
+   const ttl=c.heat&&meds[c.id]&&mv(v)>0?` title="к медиане ${pf((v/meds[c.id]-1)*100,0)}"`:'';
+   h+=`<td class="${c.bl?'bl ':''}${isSel?'sel ':''}${c.txt?'src':''}" style="${c.heat?heat(mv(v),meds[c.id]):''}"${ttl}>${s}</td>`});h+='</tr>'});
+ h+='<tr class="med"><td class="nm">Медиана</td>';cols.forEach(c=>{let v=null;
+  if(c.heat)v=meds[c.id];else if(!c.txt&&c.id!=='px')v=median(ks.map(c.v));
+  h+=`<td class="${c.bl?'bl':''}">${c.txt||c.id==='px'?'':c.heat?xf(v):c.id==='ndl'?xf(v):nf(v,c.id==='nd'?2:1)}</td>`});
+ h+='</tr></tbody></table>';
+ const el=document.getElementById('mtab');el.innerHTML=h;
+ el.querySelectorAll('th[data-c]').forEach(th=>th.onclick=()=>{const c=th.dataset.c;if(sortCol===c)sortDir=-sortDir;else{sortCol=c;sortDir=1}renderTable()})}
+
+/* ---------- сравнение финпоказателей ---------- */
+const FM={rev:['Выручка','abs'],ebitdac:['EBITDAC','abs'],nic:['NIC','abs'],m_e:['Рентабельность EBITDAC','pct'],m_n:['Рентабельность NIC','pct'],
+ g_rev:['Рост выручки г/г','pct'],g_ebitdac:['Рост EBITDAC г/г','pct'],g_nic:['Рост NIC г/г','pct']};
+const fsel=document.getElementById('fMetric');Object.entries(FM).forEach(([k,[l]])=>fsel.innerHTML+=`<option value="${k}">${l}</option>`);
+fsel.onchange=()=>{st.fm=fsel.value;renderFin()};
+sw('fView',[['abs','млрд ₽'],['idx','индекс 2025=100']],'fv',renderFin);
+function fval(k,m,y){const f=by[k].fin;
+ if(m==='m_e')return f.rev[y]&&f.ebitdac[y]!=null?f.ebitdac[y]/f.rev[y]*100:null;
+ if(m==='m_n')return f.rev[y]&&f.nic[y]!=null?f.nic[y]/f.rev[y]*100:null;
+ if(m.startsWith('g_')){const s=f[m.slice(2)],p=s[String(+y-1)],c=s[y];return p>0&&c!=null?(c/p-1)*100:null}
+ return f[m][y]}
+function renderFin(){const m=st.fm,isAbs=FM[m][1]==='abs',idx=isAbs&&st.fv==='idx';
+ document.getElementById('fView').style.display=isAbs?'':'none';
+ const trs=[];K.filter(k=>sel.has(k)).forEach(k=>{const c=by[k];let ys=YALL.map(y=>fval(k,m,y));
+  if(isAbs&&!idx)ys=ys.map(v=>v==null?null:v/1000);
+  if(idx){const b=fval(k,m,'2025');ys=ys.map(v=>b>0&&v!=null?v/b*100:null)}
+  trs.push({x:YALL,y:ys,name:c.name,type:'scatter',mode:'lines+markers',connectgaps:false,line:{color:c.color,width:2},marker:{size:8,color:c.color,line:{color:'#fff',width:2}},
+   hovertemplate:'<b>'+c.name+'</b>: %{y:,.1f}'+(idx?'':isAbs?' млрд ₽':'%')+'<extra></extra>'})});
+ Plotly.react('cFin',trs,{...L0,showlegend:true,legend:{orientation:'h',y:-0.12,font:{size:11.5}},hovermode:'x unified',margin:{l:50,r:10,t:10,b:30},
+  xaxis:{type:'category',gridcolor:'#f1f3f5'},yaxis:{gridcolor:'#f1f3f5',ticksuffix:isAbs?'':'%',zeroline:true,zerolinecolor:'#dee2e6',type:'linear'},
+  shapes:[{type:'rect',xref:'x',x0:1.5,x1:6.5,yref:'paper',y0:0,y1:1,fillcolor:'#f8f9fa',line:{width:0},layer:'below'}],
+  annotations:[{xref:'x',x:4,yref:'paper',y:1,yanchor:'top',text:'2026–2030 — прогноз',showarrow:false,font:{size:10.5,color:'#868e96'}}]},CFG);
+ // сводная таблица
+ const rows=K.filter(k=>sel.has(k)).map(k=>{const avg=mm=>{const a=YALL.slice(1).map(y=>fval(k,mm,y)).filter(v=>v!=null);return a.length?a.reduce((p,c)=>p+c,0)/a.length:null};
+  return {k,r:cagr(k,'rev',2025,2030),e:cagr(k,'ebitdac',2025,2030),n:cagr(k,'nic',2025,2030),me:avg('m_e'),mn:avg('m_n'),
+   rev26:fin(k,'rev','2026')/1000,me26:fval(k,'m_e','2026')}});
+ const cols=[['rev26','Выручка 2026П, млрд',v=>nf(v)],['r','CAGR выручки 25–30',v=>v==null?'н/п':nf(v)+'%'],['e','CAGR EBITDAC 25–30',v=>v==null?'н/п':nf(v)+'%'],['n','CAGR NIC 25–30',v=>v==null?'н/п':nf(v)+'%'],
+  ['me','Ср. рент. EBITDAC 25–30',v=>nf(v)+'%'],['mn','Ср. рент. NIC 25–30',v=>nf(v)+'%']];
+ const meds=Object.fromEntries(cols.map(c=>[c[0],median(rows.map(r=>r[c[0]]))]));
+ let h='<table class="t"><thead><tr><th class="nm" style="cursor:default">Компания</th>'+cols.map(c=>`<th style="white-space:normal;cursor:default">${c[1]}</th>`).join('')+'</tr></thead><tbody>';
+ rows.forEach(r=>{h+=`<tr><td class="nm"><span class="dot" style="display:inline-block;background:${by[r.k].color};margin-right:6px"></span><b>${by[r.k].name}</b></td>`+cols.map(c=>`<td>${c[2](r[c[0]])}</td>`).join('')+'</tr>'});
+ h+='<tr class="med"><td class="nm">Медиана</td>'+cols.map(c=>`<td>${c[2](meds[c[0]])}</td>`).join('')+'</tr></tbody></table>';
+ h+='<div class="note" style="margin-top:6px">CAGR — среднегодовой темп роста. Рентабельность NIC в годы убытка входит в среднее со знаком минус (в Excel такие годы помечены «отр.» и в среднее не входят). н/п — не применимо при отрицательной базе.</div>';
+ document.getElementById('ftab').innerHTML=h}
+
+/* ---------- история ---------- */
+const PER={'1М':[1,'m'],'3М':[3,'m'],'6М':[6,'m'],'С нач. года':null,'1Г':[12,'m'],'Все':0};
+sw('hPer',Object.keys(PER).map(k=>[k,k]),'per',renderHist);
+function startDate(){const p=PER[st.per];if(p===0)return '2000-01-01';if(p===null)return today.getFullYear()-1+'-12-31';return ago(p[0],p[1])}
+const HCAP=50;
+function renderHist(){
+ if(!live){['cPx','cHm'].forEach(id=>document.getElementById(id).innerHTML='<div class="note" style="padding:40px;text-align:center">История котировок появится после первого запуска обновления с MOEX</div>');return}
+ const s0=startDate(),trs=[],trm=[],mt=st.mult;
+ document.getElementById('hMultT').textContent=`${MN[mt].lab} NTM по историческим ценам и текущим прогнозам (выше ${HCAP}x и при убытке не показаны)`;
+ K.filter(k=>sel.has(k)).forEach(k=>{const t=T(k),c=by[k];if(!t)return;
+  const ix=t.x.map((d,i)=>i).filter(i=>t.x[i]>=s0);if(!ix.length)return;
+  const b=t.y[ix[0]];
+  trs.push({x:ix.map(i=>t.x[i]),y:ix.map(i=>t.y[i]/b*100),name:c.name,type:'scatter',mode:'lines',line:{color:c.color,width:2},customdata:ix.map(i=>t.y[i]),
+   hovertemplate:'<b>'+c.name+'</b>: %{y:.1f} (%{customdata:,.2f} ₽)<extra></extra>'});
+  const mx=[],my=[];ix.forEach(i=>{if(t.x[i]<'2024-01-01')return;const v=mult(k,mt,'NTM',t.y[i],new Date(t.x[i]));mx.push(t.x[i]);my.push(v!=null&&v>0&&v<=HCAP?v:null)});
+  trm.push({x:mx,y:my,name:c.name,type:'scatter',mode:'lines',line:{color:c.color,width:2},hovertemplate:'<b>'+c.name+'</b>: %{y:.1f}x<extra></extra>'})});
+ const im=P.index&&P.index.IMOEX;
+ if(im){const ix=im.x.map((d,i)=>i).filter(i=>im.x[i]>=s0);if(ix.length){const b=im.y[ix[0]];trs.push({x:ix.map(i=>im.x[i]),y:ix.map(i=>im.y[i]/b*100),name:'IMOEX',type:'scatter',mode:'lines',line:{color:'#6b7280',width:1.5,dash:'dash'},hovertemplate:'<b>IMOEX</b>: %{y:.1f}<extra></extra>'})}}
+ const lay={...L0,hovermode:'x unified',margin:{l:8,r:50,t:8,b:26},xaxis:{gridcolor:'#f1f3f5',showline:true,linecolor:'#dee2e6',tickformat:'%d.%m.%y',hoverformat:'%d.%m.%Y'}};
+ Plotly.react('cPx',trs,{...lay,yaxis:{side:'right',gridcolor:'#f1f3f5',zeroline:false},shapes:[{type:'line',xref:'paper',x0:0,x1:1,y0:100,y1:100,line:{color:'#dee2e6',width:1}}]},CFG);
+ Plotly.react('cHm',trm,{...lay,yaxis:{side:'right',gridcolor:'#f1f3f5',ticksuffix:'x',zeroline:false}},CFG)}
+
+/* ---------- методика ---------- */
+document.getElementById('method').innerHTML=`<b>Методика.</b>
+Капитализация = цена × количество акций из Excel-базы; EV (стоимость компании) = капитализация + чистый долг из Excel-базы (Cbonds / модели).
+EV/EBITDAC = EV / EBITDAC года; P/NIC = капитализация / NIC года. EBITDAC и NIC — EBITDA и чистая прибыль за вычетом капитализируемых расходов на разработку.
+NTM (next twelve months, следующие 12 месяцев) — прогноз текущего и следующего года, взвешенный по числу оставшихся дней текущего года.
+Медиана считается по выбранным компаниям; цвет ячейки — отклонение от медианы столбца (синий — дешевле, красный — дороже).
+<br>Прогнозы: ${C.map(c=>c.name+' — '+c.source).join('; ')}. Консенсус Астры — среднее доступных прогнозов брокеров; в 2030 г. доступны 2 из 4 (SberCIB, Sovcom).
+<br>История мультипликаторов построена по историческим ценам, но на текущих прогнозах, текущем числе акций и текущем чистом долге — это ориентир динамики оценки рынком, а не точная историческая реконструкция.
+<br>Котировки: MOEX ISS, режим TQBR; обновление 4 раза в рабочий день (11:00, 14:00, 17:00, 19:00 МСК). Внутридневная точка заменяется официальной ценой закрытия при следующем запуске.
+${live&&S?'<br>Последний запуск: '+S.run_at+'.':''}`;
+
+function renderVal(){renderKpis();renderBar();renderSc();renderTable();if(live)renderHist()}
+function renderAll(){renderVal();renderFin();renderHist()}
+document.getElementById('gWin').onchange=renderSc;
+renderAll();
+}catch(e){document.body.innerHTML='<div style="padding:40px;font:14px sans-serif;color:#c92a2a">Ошибка загрузки данных: '+e.message+'</div>';console.error(e)}
+})();
+</script></body></html>

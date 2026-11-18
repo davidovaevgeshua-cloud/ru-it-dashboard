@@ -1,0 +1,56 @@
+name: Update MOEX quotes
+
+on:
+  schedule:
+    # Все времена — UTC. МСК = UTC+3.
+    - cron: "0 8 * * 1-5"    # 11:00 МСК
+    - cron: "0 11 * * 1-5"   # 14:00 МСК
+    - cron: "0 14 * * 1-5"   # 17:00 МСК
+    - cron: "0 16 * * 1-5"   # 19:00 МСК (после основной сессии)
+  push:
+    branches: [main]
+    paths:
+      - "scripts/update_quotes.py"
+      - "data/fundamentals.json"
+  workflow_dispatch:
+    inputs:
+      full:
+        description: "Перезагрузить всю историю (--full)"
+        required: false
+        default: "false"
+
+concurrency:
+  group: update-quotes
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run update
+        run: |
+          FLAG=""
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.full }}" = "true" ]; then FLAG="--full"; fi
+          python scripts/update_quotes.py $FLAG
+
+      - name: Commit & push
+        run: |
+          git config user.name  "moex-bot"
+          git config user.email "moex-bot@users.noreply.github.com"
+          git add data/prices.json data/status.json
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore(quotes): $(date -u +'%Y-%m-%d %H:%M UTC')"
+            git pull --rebase origin main
+            git push
+          fi

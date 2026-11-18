@@ -1,0 +1,42 @@
+name: Rebuild fundamentals from Excel
+
+# Чтобы обновить прогнозы, загрузите новую версию Excel-базы в base/software_comps.xlsx
+# (Add file → Upload files). Workflow пересоберёт data/fundamentals.json.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "base/*.xlsx"
+      - "scripts/build_fundamentals.py"
+  workflow_dispatch:
+
+concurrency:
+  group: update-quotes
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install openpyxl
+      - name: Build
+        run: python scripts/build_fundamentals.py base/software_comps.xlsx --check
+      - name: Commit & push
+        run: |
+          git config user.name  "moex-bot"
+          git config user.email "moex-bot@users.noreply.github.com"
+          git add data/fundamentals.json
+          if git diff --cached --quiet; then
+            echo "No changes"
+          else
+            git commit -m "chore(fundamentals): rebuild from Excel"
+            git pull --rebase origin main
+            git push
+          fi
