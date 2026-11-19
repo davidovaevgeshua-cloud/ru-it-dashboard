@@ -21,14 +21,21 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
-      - run: pip install openpyxl
+      - name: Check Excel file
+        id: x
+        run: |
+          if [ -f base/software_comps.xlsx ]; then echo "ok=true" >> "$GITHUB_OUTPUT"; else echo "Excel-база не загружена — пропуск"; echo "ok=false" >> "$GITHUB_OUTPUT"; fi
+      - if: steps.x.outputs.ok == 'true'
+        run: pip install openpyxl
       - name: Build
+        if: steps.x.outputs.ok == 'true'
         run: python scripts/build_fundamentals.py base/software_comps.xlsx --check
       - name: Commit & push
+        if: steps.x.outputs.ok == 'true'
         run: |
           git config user.name  "moex-bot"
           git config user.email "moex-bot@users.noreply.github.com"

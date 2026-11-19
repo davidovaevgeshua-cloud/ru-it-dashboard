@@ -2,11 +2,12 @@ name: Update MOEX quotes
 
 on:
   schedule:
-    # Все времена — UTC. МСК = UTC+3.
-    - cron: "0 8 * * 1-5"    # 11:00 МСК
-    - cron: "0 11 * * 1-5"   # 14:00 МСК
-    - cron: "0 14 * * 1-5"   # 17:00 МСК
-    - cron: "0 16 * * 1-5"   # 19:00 МСК (после основной сессии)
+    # Все времена — UTC (МСК = UTC+3). Минуты не круглые: запуски «ровно в :00»
+    # GitHub откладывает сильнее всего из-за пиковой нагрузки.
+    - cron: "37 7 * * 1-5"    # 10:37 МСК
+    - cron: "37 10 * * 1-5"   # 13:37 МСК
+    - cron: "37 13 * * 1-5"   # 16:37 МСК
+    - cron: "7 16 * * 1-5"    # 19:07 МСК (после основной сессии)
   push:
     branches: [main]
     paths:
@@ -30,9 +31,9 @@ jobs:
   update:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 

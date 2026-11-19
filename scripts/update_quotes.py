@@ -111,6 +111,7 @@ def main() -> int:
 
     now = datetime.now(MSK)
     today = now.date().isoformat()
+    in_session = now.hour >= 7  # утренняя сессия MOEX начинается в 06:50 МСК
     fund = json.loads(FUND.read_text(encoding="utf-8"))
     P = {} if a.full or not PRICES.exists() else json.loads(PRICES.read_text(encoding="utf-8"))
     P.setdefault("tickers", {})
@@ -140,7 +141,9 @@ def main() -> int:
         last = m.get("LAST") or m.get("LCURRENTPRICE") or m.get("MARKETPRICE")
         prev = s.get("PREVPRICE")
         hist_today = bool(rows) and rows[-1][0] == today
-        if last and not hist_today:
+        # Ночью (00:00–07:00 МСК) торгов нет: LAST — это цена вчерашней вечерней сессии,
+        # записывать её как точку «сегодня» нельзя.
+        if last and not hist_today and in_session:
             merge(t, [(today, float(last), round(m["VALTODAY"] / 1e6, 2) if m.get("VALTODAY") else None)])
         px = float(last) if last else (t["y"][-1] if t["y"] else None)
         t.update({
@@ -163,7 +166,7 @@ def main() -> int:
             d = get(f"{ISS}/engines/stock/markets/index/boards/SNDX/securities/{ix}.json?iss.meta=off&iss.only=marketdata")
             mdx = table(d, "marketdata")
             cur = mdx[0].get("CURRENTVALUE") if mdx else None
-            if cur and not (rows and rows[-1][0] == today):
+            if cur and in_session and not (rows and rows[-1][0] == today):
                 merge(t, [(today, float(cur), None)])
             t["last"] = cur or (t["y"][-1] if t["y"] else None)
             t["prev"] = mdx[0].get("LASTVALUE") if mdx else None
