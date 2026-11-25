@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import ssl
 import sys
 import time
 from datetime import datetime, timedelta, timezone, date
@@ -39,13 +40,22 @@ FALLBACK_SECID = {
 }
 INDEXES = ["IMOEX"]
 
+# С ноября 2026 iss.moex.com работает на TLS-сертификате НУЦ Минцифры
+# (Russian Trusted Root CA), которого нет в стандартных хранилищах доверия.
+# Доверяем ему только в этом скрипте и только поверх системных корневых
+# сертификатов — проверка TLS не отключается.
+RU_CA = ROOT / "certs" / "russian_trusted_ca.pem"
+SSL_CTX = ssl.create_default_context()
+if RU_CA.exists():
+    SSL_CTX.load_verify_locations(cafile=str(RU_CA))
+
 
 def get(url: str, retries: int = 4) -> dict:
     err = None
     for i in range(retries):
         try:
             req = Request(url, headers={"User-Agent": "ru-it-dashboard/1.0"})
-            with urlopen(req, timeout=30) as r:
+            with urlopen(req, timeout=30, context=SSL_CTX) as r:
                 return json.loads(r.read())
         except (URLError, HTTPError, TimeoutError, json.JSONDecodeError) as e:
             err = e
