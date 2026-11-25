@@ -34,7 +34,7 @@ COMPANIES = [
      "source": "наш прогноз", "color": "#2a78d6", "mult_row": 6},
     {"key": "ASTR", "isin": "RU000A106T36", "name": "Астра", "row13": 15,
      "rows": {"rev": 75, "ebitdac": 76, "nic": 78}, "extra": None,
-     "source": "консенсус: Эйлер, SberCIB, Sovcom, D8", "color": "#eb6834", "mult_row": 7},
+     "source": "наш прогноз", "color": "#eb6834", "mult_row": 7},
     {"key": "BAZA", "isin": "RU000A10CTQ0", "name": "Базис", "row13": 16,
      "rows": {"rev": 35, "ebitdac": 36, "nic": 38}, "extra": None,
      "source": "наш прогноз", "color": "#1baf7a", "mult_row": 8},
@@ -53,6 +53,14 @@ COMPANIES = [
 FLAGS = {
     "SOFL": {"net_debt_bn": "Чистый долг 0,03 млрд руб (Cbonds) не согласуется с ЧД/EBITDAC 1,8x за 2025 "
                             "и 3,3x LTM в той же базе: вероятна ошибка единиц. Требует проверки — от него зависит EV."},
+}
+
+# Наш прогноз по Астре (млн руб, 2025–2030), заменяет консенсус брокеров в "fin".
+# Консенсус сохраняется в поле "consensus" для сравнения. 2024 — факт из Excel-базы.
+ASTRA_OWN = {
+    "rev": [21079, 23610.037711885056, 27396.20137174215, 33324.548293828935, 39808.78915408612, 46934.07391795832],
+    "ebitdac": [4571, 5624.063130260126, 7524.005068118789, 11063.155907762144, 14994.103075268074, 19280.500251583144],
+    "nic": [3795, 5522.5750027538825, 7182.425048100133, 10532.555405924773, 14254.33451895691, 18313.148018976957],
 }
 
 # Прогнозы брокеров по Астре (из них строится консенсус). Эйлер — в млрд руб.
@@ -142,6 +150,11 @@ def main() -> int:
                             f"Астра, {lab} {y}: консенсус в Excel {f0(xv)} млн руб (формула AVERAGE считает пустую "
                             f"ячейку Эйлера нулём); использовано среднее {len(vals)} доступных прогнозов — {f0(avg)} млн руб")
                         fin[k][y] = avg
+            item["consensus"] = json.loads(json.dumps(fin))
+            for k, vals in ASTRA_OWN.items():
+                for y, v in zip(range(2025, 2031), vals):
+                    fin[k][str(y)] = round(v, 3)
+            warnings = [w for w in warnings if not w.startswith("Астра")]
         comps.append(item)
 
     out = {
@@ -156,6 +169,8 @@ def main() -> int:
     if a.check:
         bad = 0
         for c in COMPANIES:
+            if c["key"] == "ASTR":
+                continue  # мультипликаторы Excel посчитаны на консенсусе, а не на нашем прогнозе
             item = next(x for x in comps if x["key"] == c["key"])
             ev = item["xls_mcap_bn"] + item["net_debt_bn"]
             mc = item["xls_mcap_bn"]
